@@ -16,7 +16,8 @@ done
 # Some older archives link to libiscsi, absent from Alpine 3.19 main/community.
 # Use testing only for this package; do not change the system repositories.
 if [ "$needs_libiscsi" = true ]; then
-    apk add --repository https://dl-cdn.alpinelinux.org/alpine/edge/testing libiscsi
+    apk add --repository https://dl-cdn.alpinelinux.org/alpine/edge/testing libiscsi \
+        || echo 'libiscsi install failed, continuing...'
 fi
 
 echo 'Checking QEMU...'

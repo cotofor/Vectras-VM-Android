@@ -513,8 +513,10 @@ public class SetupWizard2Activity extends AppCompatActivity {
                         " echo \"Starting setup...\";" +
                         " apk update;" +
                         " echo \"Installing packages...\";" +
+                        // A failing post-install trigger must not abort setup before
+                        // QEMU is extracted.
                         " apk add " + (QemuSetupPolicy.is32BitAbi(Build.SUPPORTED_ABIS[0]) ? AppConfig.neededPkgs32bit()
-                        : AppConfig.neededPkgs()) + ";";
+                        : AppConfig.neededPkgs()) + " || echo \"apk add reported errors, continuing...\";";
 
                 String qemuArchivePath = isCustomSetupMode ? tarPath : "/root/setup.tar.gz";
                 if (!installQemuFromPackages && !isCustomSetupMode) {
@@ -558,8 +560,11 @@ public class SetupWizard2Activity extends AppCompatActivity {
                             " chmod 755 /usr/local/bin/*;";
                 }
                 if (ACTION != ACTION_SYSTEM_UPDATE) {
+                    // vncpasswd comes from tigervnc, which only the Alpine-package
+                    // path installs; the bundled tar has no VNC server.
                     cmd += " echo \"Just a sec...\";" +
-                            " mkdir -p ~/.vnc && echo -e \"555555\\n555555\" | vncpasswd -f > ~/.vnc/passwd && chmod 0600 ~/.vnc/passwd;";
+                            " mkdir -p ~/.vnc;" +
+                            " if command -v vncpasswd >/dev/null 2>&1; then echo -e \"555555\\n555555\" | vncpasswd -f > ~/.vnc/passwd && chmod 0600 ~/.vnc/passwd; fi;";
                 }
 
                 cmd += "\n" + checkQemuCommand + "\necho \"Installation successful! xssFjnj58Id\"";
